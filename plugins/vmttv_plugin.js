@@ -17,7 +17,7 @@ function getManifest() {
 
 function getHomeSections() {
     return JSON.stringify([
-        { slug: 'all', title: '📺 Tất cả kênh', type: 'Grid', path: 'vmttv' }
+        { slug: 'su-kien', title: '🔴 Sự Kiện', type: 'Grid', path: 'vmttv' }
     ]);
 }
 
@@ -53,21 +53,25 @@ function getFilterConfig() {
 }
 
 // =============================================================================
-// URL GENERATION
+// URL GENERATION & STATE
 // =============================================================================
 
 var M3U_URL = "https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main/vmttv";
 
+// Biến toàn cục lưu trạng thái lọc (vì parseListResponse chỉ nhận 1 arg)
+var _currentCatSlug = 'all';
+var _currentSearchKeyword = '';
+
 function getUrlList(slug, filtersJson) {
-    // Luôn trả về cùng 1 URL M3U, thêm query param cat để parseListResponse lọc
-    if (slug && slug !== 'all') {
-        return M3U_URL + "?cat=" + encodeURIComponent(slug);
-    }
+    _currentCatSlug = slug || 'all';
+    _currentSearchKeyword = '';
     return M3U_URL;
 }
 
 function getUrlSearch(keyword, filtersJson) {
-    return M3U_URL + "?search=" + encodeURIComponent(keyword);
+    _currentSearchKeyword = keyword || '';
+    _currentCatSlug = 'all';
+    return M3U_URL;
 }
 
 function getUrlDetail(slug) {
@@ -208,23 +212,21 @@ function findChannelByIdInList(channels, channelId) {
 // PARSERS
 // =============================================================================
 
-function parseListResponse(apiResponseJson, apiUrl) {
+function parseListResponse(apiResponseJson) {
     try {
         var channels = parseM3U(apiResponseJson);
 
-        // Lọc theo category nếu có param ?cat=
-        var catSlug = extractParamFromUrl(apiUrl, 'cat');
-        var searchKeyword = extractParamFromUrl(apiUrl, 'search');
-
-        if (catSlug && catSlug !== 'all' && CATEGORY_MAP[catSlug]) {
-            var groupName = CATEGORY_MAP[catSlug];
+        // Lọc theo category từ biến toàn cục
+        if (_currentCatSlug && _currentCatSlug !== 'all' && CATEGORY_MAP[_currentCatSlug]) {
+            var groupName = CATEGORY_MAP[_currentCatSlug];
             channels = channels.filter(function (ch) {
                 return ch.group === groupName;
             });
         }
 
-        if (searchKeyword) {
-            var keyword = searchKeyword.toLowerCase();
+        // Lọc theo search keyword từ biến toàn cục
+        if (_currentSearchKeyword) {
+            var keyword = _currentSearchKeyword.toLowerCase();
             channels = channels.filter(function (ch) {
                 return ch.name.toLowerCase().indexOf(keyword) >= 0;
             });
@@ -253,8 +255,8 @@ function parseListResponse(apiResponseJson, apiUrl) {
     }
 }
 
-function parseSearchResponse(apiResponseJson, apiUrl) {
-    return parseListResponse(apiResponseJson, apiUrl);
+function parseSearchResponse(apiResponseJson) {
+    return parseListResponse(apiResponseJson);
 }
 
 function parseMovieDetail(apiResponseJson, apiUrl) {
