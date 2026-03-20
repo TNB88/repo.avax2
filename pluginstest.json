@@ -112,6 +112,13 @@
             "version": "1.0.0",
             "scriptUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/vbtv_plugin.js",
             "iconUrl": "https://vbtv.pro/vebo-icon.png"
+        },
+        {
+            "id": "vmttv",
+            "name": "VMT TV",
+            "version": "1.0.0",
+            "scriptUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/vmttv_plugin.js",
+            "iconUrl": "https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main/Logo.png"
         }
     ]
 }
