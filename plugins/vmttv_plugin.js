@@ -6,7 +6,7 @@ function getManifest() {
     return JSON.stringify({
         "id": "vmttv",
         "name": "VMT TV",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "baseUrl": "https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main",
         "iconUrl": "https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main/Logo.png",
         "isEnabled": true,
@@ -25,17 +25,22 @@ function getPrimaryCategories() {
     return JSON.stringify([
         { name: 'Tất cả', slug: 'all' },
         { name: 'Kubo Network', slug: 'kubo-network' },
+        { name: 'SG Network', slug: 'sg-network' },
         { name: 'Sự Kiện', slug: 'su-kien' },
         { name: 'THỂ THAO QUỐC TẾ', slug: 'the-thao-quoc-te' },
         { name: '⚽ Thể thao quốc tế', slug: 'bong-da-quoc-te' },
         { name: 'TVB', slug: 'tvb' },
         { name: 'LIVE EVENTS 🔴', slug: 'live-events' },
         { name: 'Sự Kiện TV360', slug: 'su-kien-tv360' },
+        { name: 'Sự Kiện VTVPrime', slug: 'su-kien-vtvprime' },
         { name: 'Rạp Phim', slug: 'rap-phim' },
         { name: 'VTV', slug: 'vtv' },
         { name: 'VTVcab', slug: 'vtvcab' },
         { name: 'SCTV', slug: 'sctv' },
+        { name: '📦 In The Box', slug: 'in-the-box' },
         { name: 'HTV', slug: 'htv' },
+        { name: 'HTVC', slug: 'htvc' },
+        { name: '🌐 Thiết yếu', slug: 'thiet-yeu' },
         { name: 'Địa phương', slug: 'dia-phuong' },
         { name: 'Quốc Tế', slug: 'quoc-te' },
         { name: 'Radio', slug: 'radio' },
@@ -53,33 +58,26 @@ function getFilterConfig() {
 }
 
 // =============================================================================
-// URL GENERATION & STATE
+// URL GENERATION
 // =============================================================================
 
 var M3U_URL = "https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main/vmttv";
 
-// Biến toàn cục lưu trạng thái lọc (vì parseListResponse chỉ nhận 1 arg)
-var _currentCatSlug = 'all';
-var _currentSearchKeyword = '';
-
 function getUrlList(slug, filtersJson) {
-    _currentCatSlug = slug || 'all';
-    _currentSearchKeyword = '';
+    if (slug && slug !== 'all') {
+        return M3U_URL + "?cat=" + encodeURIComponent(slug);
+    }
     return M3U_URL;
 }
 
 function getUrlSearch(keyword, filtersJson) {
-    _currentSearchKeyword = keyword || '';
-    _currentCatSlug = 'all';
-    return M3U_URL;
+    return M3U_URL + "?search=" + encodeURIComponent(keyword);
 }
 
 function getUrlDetail(slug) {
-    // Nếu slug là URL stream → trả thẳng cho player
     if (slug.indexOf("http") === 0) {
         return slug;
     }
-    // Nếu là channel ID → trả M3U URL kèm param id để parseMovieDetail tìm kênh
     return M3U_URL + "?id=" + encodeURIComponent(slug);
 }
 
@@ -88,22 +86,27 @@ function getUrlCountries() { return ""; }
 function getUrlYears() { return ""; }
 
 // =============================================================================
-// CATEGORY SLUG MAPPING
+// CATEGORY SLUG ↔ group-title MAPPING (đầy đủ theo M3U gốc)
 // =============================================================================
 
 var CATEGORY_MAP = {
     'kubo-network': 'Kubo Network',
+    'sg-network': 'SG Network',
     'su-kien': 'Sự Kiện',
     'the-thao-quoc-te': 'THỂ THAO QUỐC TẾ',
     'bong-da-quoc-te': '⚽| Thể thao quốc tế',
     'tvb': 'TVB',
     'live-events': 'LIVE EVENTS 🔴',
     'su-kien-tv360': 'Sự Kiện TV360',
+    'su-kien-vtvprime': 'Sự Kiện VTVPrime',
     'rap-phim': 'Rạp Phim',
     'vtv': 'VTV',
     'vtvcab': 'VTVcab',
     'sctv': 'SCTV',
+    'in-the-box': '📦| In The Box',
     'htv': 'HTV',
+    'htvc': 'HTVC',
+    'thiet-yeu': '🌐| Thiết yếu',
     'dia-phuong': 'Địa phương',
     'quoc-te': 'Quốc Tế',
     'radio': 'Radio',
@@ -114,15 +117,6 @@ var CATEGORY_MAP = {
     'thai-lan': '🇹🇭| Thái Lan',
     'campuchia': '🇰🇭| Campuchia'
 };
-
-// Reverse map: group-title → slug
-var GROUP_TO_SLUG = {};
-(function () {
-    var keys = Object.keys(CATEGORY_MAP);
-    for (var i = 0; i < keys.length; i++) {
-        GROUP_TO_SLUG[CATEGORY_MAP[keys[i]]] = keys[i];
-    }
-})();
 
 // =============================================================================
 // M3U PARSER
@@ -139,12 +133,10 @@ function parseM3U(text) {
         var line = lines[i].trim();
 
         if (line.indexOf('#EXTINF:') === 0) {
-            // Parse EXTINF line
             var groupMatch = line.match(/group-title="([^"]*)"/);
             var logoMatch = line.match(/tvg-logo="([^"]*)"/);
             var tvgIdMatch = line.match(/tvg-id="([^"]*)"/);
 
-            // Channel name: sau dấu phẩy cuối cùng
             var commaIdx = line.lastIndexOf(',');
             var name = commaIdx >= 0 ? line.substring(commaIdx + 1).trim() : '';
 
@@ -158,14 +150,11 @@ function parseM3U(text) {
             currentUserAgent = '';
         } else if (line.indexOf('#EXTVLCOPT:http-user-agent=') === 0) {
             currentUserAgent = line.substring('#EXTVLCOPT:http-user-agent='.length).trim();
-        } else if (line.indexOf('#EXTVLCOPT:http-referrer=') === 0) {
-            // Skip referrer directives
-        } else if (line.indexOf('#KODIPROP:') === 0) {
-            // Skip DRM/Kodi properties
+        } else if (line.indexOf('#EXTVLCOPT:') === 0 || line.indexOf('#KODIPROP:') === 0) {
+            // Skip VLC/Kodi directives
         } else if (line.indexOf('#') === 0) {
-            // Skip other directives (#EXTM3U, etc.)
+            // Skip other directives
         } else if (line.length > 0 && (line.indexOf('http') === 0 || line.indexOf('//') === 0)) {
-            // This is a URL line
             if (currentInfo) {
                 currentInfo.url = line;
                 currentInfo.userAgent = currentUserAgent;
@@ -173,7 +162,6 @@ function parseM3U(text) {
                 currentInfo = null;
                 currentUserAgent = '';
             } else {
-                // URL without EXTINF → skip (standalone EXTVLCOPT/KODIPROP entries)
                 currentUserAgent = '';
             }
         }
@@ -192,7 +180,6 @@ function extractParamFromUrl(url, param) {
 }
 
 function makeChannelId(channel) {
-    // Tạo ID duy nhất: tvgId hoặc group::name::index
     if (channel.tvgId) {
         return channel.tvgId;
     }
@@ -209,24 +196,26 @@ function findChannelByIdInList(channels, channelId) {
 }
 
 // =============================================================================
-// PARSERS
+// PARSERS (apiUrl là tham số thứ 2 được app truyền vào)
 // =============================================================================
 
-function parseListResponse(apiResponseJson) {
+function parseListResponse(apiResponseJson, apiUrl) {
     try {
         var channels = parseM3U(apiResponseJson);
 
-        // Lọc theo category từ biến toàn cục
-        if (_currentCatSlug && _currentCatSlug !== 'all' && CATEGORY_MAP[_currentCatSlug]) {
-            var groupName = CATEGORY_MAP[_currentCatSlug];
+        // Lọc theo category từ ?cat= trong apiUrl
+        var catSlug = extractParamFromUrl(apiUrl, 'cat');
+        if (catSlug && catSlug !== 'all' && CATEGORY_MAP[catSlug]) {
+            var groupName = CATEGORY_MAP[catSlug];
             channels = channels.filter(function (ch) {
                 return ch.group === groupName;
             });
         }
 
-        // Lọc theo search keyword từ biến toàn cục
-        if (_currentSearchKeyword) {
-            var keyword = _currentSearchKeyword.toLowerCase();
+        // Lọc theo search keyword từ ?search= trong apiUrl
+        var searchKeyword = extractParamFromUrl(apiUrl, 'search');
+        if (searchKeyword) {
+            var keyword = searchKeyword.toLowerCase();
             channels = channels.filter(function (ch) {
                 return ch.name.toLowerCase().indexOf(keyword) >= 0;
             });
@@ -255,8 +244,8 @@ function parseListResponse(apiResponseJson) {
     }
 }
 
-function parseSearchResponse(apiResponseJson) {
-    return parseListResponse(apiResponseJson);
+function parseSearchResponse(apiResponseJson, apiUrl) {
+    return parseListResponse(apiResponseJson, apiUrl);
 }
 
 function parseMovieDetail(apiResponseJson, apiUrl) {
@@ -268,7 +257,6 @@ function parseMovieDetail(apiResponseJson, apiUrl) {
         var channel = findChannelByIdInList(channels, channelId);
         if (!channel) return "null";
 
-        // Build servers + episodes → episode ID = link stream trực tiếp
         var servers = [];
         var episodes = [];
 
@@ -309,21 +297,14 @@ function parseMovieDetail(apiResponseJson, apiUrl) {
     }
 }
 
-// parseDetailResponse: nhận episode ID (= URL stream trực tiếp)
-// getUrlDetail trả thẳng URL stream → app fetch → trả response ở đây
 function parseDetailResponse(apiResponseJson, apiUrl) {
     try {
-        // apiUrl chính là link stream (vì getUrlDetail trả thẳng khi slug là http URL)
         var streamUrl = apiUrl || "";
-
-        // Xác định user-agent phù hợp
         var userAgent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
 
         return JSON.stringify({
             url: streamUrl,
-            headers: {
-                "User-Agent": userAgent
-            },
+            headers: { "User-Agent": userAgent },
             subtitles: []
         });
     } catch (error) {
