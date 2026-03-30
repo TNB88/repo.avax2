@@ -6,7 +6,7 @@ function getManifest() {
     return JSON.stringify({
         "id": "vmttv",
         "name": "VMT TV",
-        "version": "1.0.1",
+        "version": "1.0.2",
         "baseUrl": "https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main",
         "iconUrl": "https://raw.githubusercontent.com/vuminhthanh12/vuminhthanh12/refs/heads/main/Logo.png",
         "isEnabled": true,
@@ -251,6 +251,29 @@ function parseMovieDetail(apiResponseJson, apiUrl) {
 
         var channels = parseM3U(apiResponseJson);
         var channel = findChannelByIdInList(channels, channelId);
+
+        // Fallback 1: match by index (last part of ID after '::')
+        if (!channel) {
+            var parts = channelId.split('::');
+            if (parts.length >= 2) {
+                var idx = parseInt(parts[parts.length - 1], 10);
+                if (!isNaN(idx)) {
+                    for (var i = 0; i < channels.length; i++) {
+                        if (channels[i].index === idx) { channel = channels[i]; break; }
+                    }
+                }
+            }
+        }
+        // Fallback 2: match by channel name (middle part of ID)
+        if (!channel) {
+            var parts2 = channelId.split('::');
+            if (parts2.length >= 2) {
+                var nameToFind = parts2[parts2.length - 2];
+                for (var j = 0; j < channels.length; j++) {
+                    if (channels[j].name === nameToFind) { channel = channels[j]; break; }
+                }
+            }
+        }
         if (!channel) return "null";
 
         var servers = [];

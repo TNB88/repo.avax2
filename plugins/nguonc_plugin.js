@@ -8,7 +8,7 @@ function getManifest() {
         "name": "Phim NguonC",
         "version": "1.0.8",
         "baseUrl": "https://phim.nguonc.com",
-        "iconUrl": "https://stpaulclinic.vn/vaapp/plugins/nguonC.png",
+        "iconUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/nguonC.png",
         "isEnabled": true,
         "type": "MOVIE",
         "playerType": "embed"

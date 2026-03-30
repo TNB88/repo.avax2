@@ -8,7 +8,7 @@ function getManifest() {
         "name": "KKPhim",
         "version": "1.0.1",
         "baseUrl": "https://phimapi.com",
-        "iconUrl": "https://stpaulclinic.vn/vaapp/plugins/kkphim.png",
+        "iconUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/kkphim.png",
         "isEnabled": true,
         "type": "MOVIE"
     });

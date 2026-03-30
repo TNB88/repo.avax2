@@ -8,7 +8,7 @@ function getManifest() {
         "name": "HH3D - Hoạt Hình 3D",
         "version": "1.0.3",
         "baseUrl": "https://hoathinh3d.ai",
-        "iconUrl": "https://stpaulclinic.vn/vaapp/plugins/hh3d.ico",
+        "iconUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/hh3d.ico",
         "isEnabled": true,
         "isAdult": false,
         "type": "MOVIE",

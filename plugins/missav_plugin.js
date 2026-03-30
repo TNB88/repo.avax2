@@ -6,9 +6,9 @@ function getManifest() {
     return JSON.stringify({
         "id": "missav",
         "name": "MissAV",
-        "version": "1.1.0",
+        "version": "1.1.1",
         "baseUrl": "https://missav.media",
-        "iconUrl": "https://stpaulclinic.vn/vaapp/plugins/missav.ico",
+        "iconUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/missav.ico",
         "isEnabled": true,
         "isAdult": true,
         "type": "VIDEO",
@@ -831,8 +831,8 @@ function parseDetailResponse(html) {
         url: streamUrl,
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Referer": "https://missav.media/",
-            "Origin": "https://missav.media"
+            "Referer": "https://missav123.com/",
+            "Origin": "https://missav123.com"
         },
         subtitles: []
     });

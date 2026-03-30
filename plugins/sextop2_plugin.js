@@ -8,7 +8,7 @@ function getManifest() {
         "name": "Sextop2",
         "version": "1.1.4",
         "baseUrl": "https://sextop1.movie",
-        "iconUrl": "https://stpaulclinic.vn/vaapp/plugins/sextop1.webp",
+        "iconUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/sextop1.webp",
         "isEnabled": true,
         "isAdult": true,
         "type": "VIDEO",

@@ -6,15 +6,16 @@ function getManifest() {
     return JSON.stringify({
         "id": "missav2",
         "name": "MissAV 2",
-        "version": "1.0.9",
+        "version": "1.1.1",
         "baseUrl": "https://missav123.com",
         "fallbackUrls": ["https://missav.media"],
-        "iconUrl": "https://stpaulclinic.vn/vaapp/plugins/missav.ico",
+        "iconUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/missav.ico",
         "isEnabled": true,
         "isAdult": true,
         "type": "VIDEO",
         "layoutType": "HORIZONTAL",
-        "subtitleCat": true
+        "subtitleCat": true,
+        "imageReferer": "https://missav.ai/"
     });
 }
 
@@ -760,9 +761,9 @@ function parseDetailResponse(html) {
     // Strategy 2: Direct domain scan
     if (!uuid) {
         var m = html.match(/surrit\.com\/([0-9a-f-]{36})/i) ||
-                html.match(/sixyik\.com\/([0-9a-f-]{36})/i) ||
-                html.match(/nineyu\.com\/([0-9a-f-]{36})/i) ||
-                html.match(/fourhoi\.com\/([0-9a-f-]{36})/i);
+            html.match(/sixyik\.com\/([0-9a-f-]{36})/i) ||
+            html.match(/nineyu\.com\/([0-9a-f-]{36})/i) ||
+            html.match(/fourhoi\.com\/([0-9a-f-]{36})/i);
         if (m) uuid = m[1];
     }
 

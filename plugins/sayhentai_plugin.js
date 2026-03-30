@@ -8,7 +8,7 @@ function getManifest() {
         "name": "SayHentai",
         "version": "1.0.2",
         "baseUrl": "https://sayhentai.vc",
-        "iconUrl": "https://sayhentai.vc/apple-touch-icon.png",
+        "iconUrl": "https://sayhentai.world/favicon-32x32.png",
         "isEnabled": true,
         "isAdult": true,
         "type": "MANGA",
