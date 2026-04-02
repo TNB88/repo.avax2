@@ -1,138 +1,342 @@
 # 🛠️ VAAPP Plugin Developer Kit
 
-Chào bạn! Ứng dụng VAAPP hoàn toàn là một trình vỏ (Shell) xử lý UI và logic Player. Nó có khả năng cắm (Plug & Play) mọi kho phim do bạn tự phát triển thông qua **Hệ Sinh Thái Plugin JS**.
+## App Hoạt Động Như Nào?
 
-Nếu bạn không có source code của VAAPP để test, đừng lo lắng! Quá trình phát triển kho phụ trợ cực kỳ dễ dàng trên máy tính của bạn thông qua trình duyệt web thông thường.
+VAAPP là một **trình vỏ (Shell)** — nó chỉ lo UI và Player. Toàn bộ nội dung phim/truyện được cung cấp qua **Plugin JS** do bạn viết.
 
-## 🌟 Quick Start (Bắt Đầu Nhanh)
+### Luồng Dữ Liệu Chi Tiết
 
-Cách thức App lấy dữ liệu như sau:
-1. App gọi các hàm JS `getUrl...()` trong Plugin của bạn để lấy URL cần tải trang.
-2. App tự động kết nối HTTP, bóc toàn bộ mã nguồn HTML của trang Web đó, và trả lại vào hàm `parse...Response(html)`.
-3. Trong hàm Parse, bạn tự code Regex hoặc dùng ngón võ JS tùy ý để tách được Title, Thumb, Danh sách tập và Link m3u8...
-4. Quan trọng: Dữ liệu bạn trả ra từ hàm Parse bắt buộc phải đúng chuẩn JSON Format định sẵn thì App mới vẽ giao diện lên được.
+```
+NGƯỜI DÙNG bấm vào mục "Hành Động" trên Trang chủ
+        │
+        ▼
+┌─ APP gọi: getUrlList("hanh-dong", '{"page":1}') ─────────────────┐
+│  Plugin trả: "https://phim.com/the-loai/hanh-dong?page=1"        │
+└───────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌─ APP tự fetch HTTP GET url đó ────────────────────────────────────┐
+│  Nhận toàn bộ HTML/JSON thô từ server                             │
+└───────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌─ APP gọi: parseListResponse(html) ────────────────────────────────┐
+│  Plugin parse HTML → trả JSON: { items: [{id, title, poster}...]} │
+└───────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌─ APP render danh sách phim lên UI ────────────────────────────────┐
+│  Người dùng bấm vào 1 phim → Lặp lại chu trình với Detail/Play   │
+└───────────────────────────────────────────────────────────────────┘
+```
 
-### Làm Cách Nào Để Test Code (Debug) Ở Local?
+### Luồng Xem Phim (Chi Tiết → Player)
 
-Vì ứng dụng chạy trên Điện thoại và Tivi nên bạn không thể dễ dàng bật F12 để `console.log()` như trên Web. Do đó, hãy làm theo 3 bước giả lập cực kỳ đơn giản này:
+```
+Bước 1: parseMovieDetail(html)
+   → Trả servers + episodes (mỗi episode có id = URL hoặc slug)
 
-1. **Chuẩn Bị:** Mở file `plugin_template.js` -> Coppy đổi tên thành `<ten_web>_plugin.js`. 
-2. **Môi Trường Tester:** Bật file **`tester.html`** (nằm trong thư mục này) bằng trình duyệt Chrome.
-3. **Debug:**
-    - Cột 1: Bấm nút "Nạp file JS" để nhét Script kia vào mồm Tester.
-    - Cột 2 (Mock Data): Truy cập trang phim của bạn bằng một Tab khác, Bấm Chuột Phải -> `View Page Source` (hoặc Ctr+U) để thấy HTML thô như máy chú thấy. Copy HTML này quăng vào Cột Thứ 2.
-    - Cột 3: Bấm chạy thử các hàm `parse...()` 
-    - Cột 4: Kết quả xanh lét hiện ra nếu cấu trúc JSON chuẩn. Còn nếu đỏ chót -> Code lỗi dòng nào nó báo dòng đó, mở Code Editor sửa tiếp... cho tới khi xanh.
+Bước 2: Người dùng chọn tập
+   → App gọi getUrlDetail(episode.id) để lấy URL fetch
+   → App fetch URL → gọi parseDetailResponse(html)
+
+Bước 3: parseDetailResponse(html)
+   → Trả { url, headers, mimeType, subtitles }
+
+Bước 4:
+   ├─ Nếu isEmbed = false → ExoPlayer phát url trực tiếp
+   ├─ Nếu isEmbed = true  → App fetch tiếp → gọi parseEmbedResponse()
+   │                        (lặp tối đa 3 lần cho đến khi isEmbed = false)
+   └─ Nếu playerType = "embed" → WebView load url
+```
 
 ---
 
-## 🛠 Bộ Trọng Tâm Hàm JSON API 
+## 🚀 Bắt Đầu Nhanh (3 Bước)
 
-Hệ thống QuickJS Parser trong App cực kỳ rạch ròi. Dưới đây là những tham số bắt buộc để API trên Mobile lẫn TV có thể hiển thị mượt. Nếu trả thiếu hoặc lỗi định dạng, phần List hiển thị `N/A`, hình ảnh đen thui hoặc văng Crash Null!
+### Bước 1: Tạo Plugin
+Copy file `plugin_template.js` → đổi tên `ten_web_plugin.js`, bắt đầu viết code.
 
-### 1. Hàm `getManifest()`
-Đại diện cho thông tin Plugin. **Lưu ý ID phải là duy nhất**. Format:
+### Bước 2: Test Trên Máy Tính
+Mở file **`tester.html`** bằng Chrome:
+1. **Nạp JS**: Bấm "Nạp file JS" → chọn file plugin của bạn
+2. **Dán HTML**: Mở trang phim → Ctrl+U (View Source) → copy dán vào ô input
+3. **Chạy thử**: Bấm các nút `parseListResponse()`, `parseMovieDetail()`...
+4. **Xem kết quả**: Xanh = JSON chuẩn ✅ | Đỏ = lỗi cần sửa ❌
+
+### Bước 3: Đăng Ký
+Upload file `.js` lên GitHub Raw → thêm vào `plugins.json` → App tự cập nhật.
+
+---
+
+## 📋 Danh Sách Tất Cả Các Hàm
+
+### Nhóm 1: Config (Khai báo)
+
+| Hàm | Trả về | Bắt buộc |
+|-----|--------|----------|
+| `getManifest()` | Thông tin plugin | ✅ |
+| `getHomeSections()` | Các mục trang chủ | ✅ |
+| `getPrimaryCategories()` | Menu thể loại | Tùy chọn |
+| `getFilterConfig()` | Bộ lọc | Tùy chọn |
+
+### Nhóm 2: URL (Sinh đường dẫn)
+
+| Hàm | Tham số | Trả về |
+|-----|---------|--------|
+| `getUrlList(slug, filtersJson)` | slug mục + filters | URL string |
+| `getUrlSearch(keyword, filtersJson)` | từ khóa | URL string |
+| `getUrlDetail(slug)` | slug phim | URL string |
+| `getUrlCategories()` | — | URL string |
+
+### Nhóm 3: Parser (Xử lý dữ liệu) ⭐
+
+| Hàm | Nhận vào | Trả về |
+|-----|----------|--------|
+| `parseListResponse(html)` | HTML/JSON thô | `{ items: [...], pagination: {...} }` |
+| `parseSearchResponse(html)` | HTML/JSON thô | Giống parseListResponse |
+| `parseMovieDetail(html)` | HTML chi tiết | `{ id, title, servers: [...], ... }` |
+| `parseDetailResponse(html)` | HTML trang xem | `{ url, headers, mimeType, ... }` |
+| `parseEmbedResponse(html, url)` | HTML embed page | `{ url, isEmbed, mimeType, ... }` |
+
+---
+
+## 📐 Data Format Chi Tiết
+
+### `getManifest()` — Thông tin Plugin
+
 ```json
 {
-  "id": "motphim",
-  "name": "Mọt Phim Pro Plus",
-  "version": "1.0.1",
-  "baseUrl": "https://motphimpro.com",
-  "iconUrl": "link_ảnh_vuông_để_hiển_thị.jpg",
-  "isEnabled": true,
-  "isAdult": false,
-  "type": "MOVIE",
-  "layoutType": "VERTICAL"
+    "id": "unique_id",
+    "name": "Tên Hiển Thị",
+    "version": "1.0.0",
+    "baseUrl": "https://phim.example.com",
+    "iconUrl": "https://icon.png",
+    "isEnabled": true,
+    "isAdult": false,
+    "type": "MOVIE",
+    "layoutType": "VERTICAL",
+    "playerType": "exoplayer"
 }
 ```
 
-### 2. Hàm `parseListResponse(html)`
-Từ HTML mục danh sách (Home, Thể Loại, Tìm Kiếm...), ép ngược thành:
+**`playerType` options:**
+| Giá trị | Khi nào dùng |
+|---------|-------------|
+| `"exoplayer"` | Khi bạn trích được link `.m3u8` / `.mp4` trực tiếp (khuyến nghị) |
+| `"embed"` | Khi chỉ có link iframe, phải dùng WebView |
+| `"auto"` | App tự phán: URL chứa `.m3u8`/`.mp4` → ExoPlayer, còn lại → WebView |
+
+---
+
+### `parseListResponse()` — Danh sách phim
+
 ```json
 {
-  "items": [
-    {
-      "id": "slug_cua_phim_01",
-      "title": "Tên Hiển Thị",
-      "posterUrl": "https://...png",
-      "backdropUrl": "https://...png",
-      "description": "Nội dung...",
-      "year": 2024,
-      "quality": "FHD",
-      "episode_current": "Tập 10/12",
-      "lang": "Vietsub"
+    "items": [
+        {
+            "id": "slug-phim",
+            "title": "Tên Phim",
+            "posterUrl": "https://img.../poster.jpg",
+            "backdropUrl": "https://img.../backdrop.jpg",
+            "description": "Mô tả ngắn",
+            "year": 2024,
+            "quality": "FHD",
+            "episode_current": "Tập 10/12",
+            "lang": "Vietsub"
+        }
+    ],
+    "pagination": {
+        "currentPage": 1,
+        "totalPages": 5,
+        "totalItems": 100,
+        "itemsPerPage": 20
     }
-  ],
-  "pagination": { "currentPage": 1, "totalPages": 5, "totalItems": 100, "itemsPerPage": 20 }
 }
 ```
 
-### 3. Hàm `parseMovieDetail(html)`
-Từ HTML trang xem chi tiết, trích xuất cấu trúc phim lớn:
+---
+
+### `parseMovieDetail()` — Chi tiết phim
+
 ```json
 {
-  "id": "slug_cua_phim_01",
-  "title": "Avenger",
-  "posterUrl": "...",
-  "backdropUrl": "...",
-  "description": "...",
-  "servers": [
-    {
-      "name": "VIP SV1",
-      "episodes": [
-        { "id": "tap-1", "name": "Tập 1", "slug": "slug_de_get_link" }
-      ]
+    "id": "slug-phim",
+    "title": "Tên Phim",
+    "posterUrl": "https://...",
+    "backdropUrl": "https://...",
+    "description": "Nội dung phim...",
+    "servers": [
+        {
+            "name": "Server HD",
+            "episodes": [
+                {
+                    "id": "https://phim.com/xem/tap-1",
+                    "name": "Tập 1",
+                    "slug": "tap-1"
+                }
+            ]
+        }
+    ],
+    "quality": "FHD",
+    "year": 2024,
+    "rating": 8.5,
+    "casts": "Diễn viên A, B",
+    "director": "Đạo diễn C",
+    "category": "Hành Động, Phiêu Lưu",
+    "status": "Full",
+    "duration": "120 Phút"
+}
+```
+
+**🔑 Về `episode.id`:**
+- Nếu là link `.m3u8`/`.mp4` trực tiếp → App phát luôn, KHÔNG gọi `parseDetailResponse`
+- Nếu là slug/URL khác → App gọi `getUrlDetail(episode.id)` → fetch → `parseDetailResponse(html)`
+
+---
+
+### `parseDetailResponse()` — Lấy Link Video
+
+#### Trường hợp đơn giản (link trực tiếp):
+```json
+{
+    "url": "https://cdn.example.com/video.m3u8",
+    "headers": {
+        "Referer": "https://phim.example.com"
+    },
+    "subtitles": [
+        { "lang": "vi", "url": "https://.../sub_vi.srt" }
+    ]
+}
+```
+
+#### Trường hợp embed (cần WebView):
+```json
+{
+    "url": "https://player.example.com/embed/abc123",
+    "headers": { "Referer": "https://phim.example.com" }
+}
+```
+
+#### Trường hợp nâng cao — Recursive Embed:
+```json
+{
+    "url": "https://site.com/ajax.php",
+    "isEmbed": true,
+    "postBody": "id=12345&sv=1",
+    "headers": {
+        "Referer": "https://site.com",
+        "X-Requested-With": "XMLHttpRequest"
     }
-  ],
-  "quality": "FHD",
-  "lang": "Thuyết Minh",
-  "year": 2024,
-  "rating": 8.5,
-  "casts": "Jack, J97",
-  "director": "Nguyễn Văn A",
-  "category": "Hành Động, Hài Hước",
-  "status": "Trailer",
-  "duration": "120 Phút"
+}
+```
+App sẽ POST tới URL đó → nhận response → gọi `parseEmbedResponse(html, url)` → lặp lại nếu `isEmbed` vẫn = `true`.
+
+---
+
+### `parseEmbedResponse(html, url)` — Xử lý embed nhiều bước
+
+Hàm này **chỉ cần viết** khi trang của bạn dùng luồng phức tạp (AJAX → iframe → stream). App gọi hàm này trong vòng lặp.
+
+```javascript
+function parseEmbedResponse(html, sourceUrl) {
+    // Bước trung gian: HTML chứa iframe → trích URL iframe
+    var iframeMatch = html.match(/src="(https?:\/\/[^"]+)"/);
+    if (iframeMatch) {
+        return JSON.stringify({
+            url: iframeMatch[1],
+            isEmbed: true,    // ← true = App sẽ fetch tiếp URL này
+            headers: { "Referer": "https://site.com/" }
+        });
+    }
+    
+    // Bước cuối: trích direct stream
+    var fileMatch = html.match(/"file"\s*:\s*"(https?[^"]+)"/);
+    if (fileMatch) {
+        return JSON.stringify({
+            url: fileMatch[1],
+            isEmbed: false,   // ← false = URL cuối cùng, phát luôn
+            mimeType: "application/x-mpegURL",
+            headers: { "Referer": "https://embed-server.com/" }
+        });
+    }
+    
+    // Không tìm thấy → dừng loop
+    return JSON.stringify({ url: "", isEmbed: false });
 }
 ```
 
-### 4. Hàm `parseDetailResponse(html)` (Cuối Cùng, Lấy Link Video!)
-Màn hốt hụi chót! Gửi Data từ thẻ DOM mà bạn mổ xẻ ra để Video Player phát m3u8.
+**Quy tắc:**
+- `isEmbed: true` → App fetch URL đó rồi gọi lại `parseEmbedResponse()` (tối đa 3 lần)
+- `isEmbed: false` → URL cuối cùng, App phát bằng ExoPlayer
+- `url: ""` → Dừng lặp, App báo lỗi
+
+---
+
+### Trường `mimeType` — Khi file extension không chuẩn
+
+ExoPlayer nhận dạng stream qua extension (`.m3u8` → HLS, `.mp4` → Progressive). Nhưng nếu server dùng extension lạ (`.vl`, `.xyz`, `.dat`...), plugin cần chỉ định `mimeType`:
+
 ```json
 {
-  "url": "https://cdn2.domain.com/video.m3u8",
-  "headers": {
-    "Referer": "https://domain.com",
-    "Origin": "https://domain.com",
-    "User-Agent": "Mozilla/5.0 (...)",
-    "Accept": "*/*"
-  },
-  "subtitles": []
+    "url": "https://cdn.example.com/03105.vl",
+    "mimeType": "application/x-mpegURL"
 }
 ```
 
+| `mimeType` | Loại stream |
+|------------|------------|
+| `"application/x-mpegURL"` | HLS (m3u8 content) |
+| `"video/mp4"` | MP4 |
+| `""` hoặc không khai | App tự nhận dạng |
+
+> **Lợi ích**: Nếu sau này server đổi extension từ `.vl` → `.xyz`, bạn chỉ sửa plugin JS, KHÔNG cần build lại App. Tất cả do plugin quyết định.
+
+---
+
+## 🧪 Mẹo Debug
+
+### Trong tester.html:
+- Hàm `parseListResponse` / `parseMovieDetail` cần dán **HTML source** của trang web tương ứng
+- Hàm `getManifest` / `getHomeSections` chạy **không cần tham số**
+- Hàm `getUrlList` / `getUrlDetail` cần nhập **slug** vào ô input
+
+### Mẹo viết Regex:
+```javascript
+// Lấy tất cả <a> có class "movie-item"
+var regex = /<a[^>]*class="movie-item"[^>]*href="([^"]+)"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"[\s\S]*?<h3[^>]*>([^<]+)/g;
+var match;
+var items = [];
+while ((match = regex.exec(html)) !== null) {
+    items.push({
+        id: match[1].replace('/phim/', ''),
+        posterUrl: match[2],
+        title: match[3].trim()
+    });
 }
 ```
 
-**⚠️ Trường Hợp KHÔNG Có Link `m3u8` Trực Tiếp (Dùng Link Embed/Iframe)**
-Rất nhiều trang phim giấu m3u8 và chỉ cung cấp link Iframe của Server Player (ví dụ: doodstream, hydrax...). Lúc này, App của chúng ta ĐÃ hỗ trợ tự động Parse và Play bằng WebView. Nhiệm vụ của bạn chỉ là truyền link Embed đó vào biến `url`:
-```json
-{
-  "url": "https://vidplayer.site/embed/avenger123",
-  "headers": {
-    "Referer": "https://domain.com"
-  },
-  "subtitles": []
-}
-```
-*Lưu ý: Link Iframe sẽ được WebView chạy ngầm, do đó App sẽ tự bóc mẽ và chiếu nội dung bên trong lên Player chuẩn! Một ví dụ về việc cào link Iframe/Embed có trong source của `sextop1_plugin.js`.*
+### QuickJS sandbox — Những thứ KHÔNG dùng được:
+❌ `document.querySelector()`,  `window.location`, `DOM API`
+❌ `fetch()`, `XMLHttpRequest`, `async/await`
+❌ `require()`, `import`
 
-**⚠️ Trường Hợp Tái Tạo Lại Link `m3u8` Từ Đoạn Đóng Gói (Xếp hình UUID)**
-Nhiều trang bảo mật (như MissAV) giấu link m3u8 qua một biến `Blob` hoặc một thẻ `data-source` chứa mã số UUID (ví dụ: `8029b9cd-99b3-4f9e-a0e4-9d554a9c6b81`). 
-Khi bạn mở Network Tab kiểm tra thì thấy thực chất trình duyệt nó ghép mã UUID kia vào một Hosting CDN riêng để ra link `m3u8` cuối cùng: `https://surrit.com/{UUID}/playlist.m3u8`.
+### Những thứ DÙNG ĐƯỢC:
+✅ `JSON.parse()`, `JSON.stringify()`
+✅ `String.match()`, `String.replace()`, `String.split()`, `String.indexOf()`
+✅ `RegExp`, `/pattern/g.exec()`
+✅ `Array.map()`, `Array.filter()`, `Array.forEach()`
+✅ `try {} catch(e) {}`
+✅ `encodeURIComponent()`, `decodeURIComponent()`
 
-Trong trường hợp này, bạn chỉ cần dùng Regex quét dính cái UUID đó, rồi tự nối chuỗi lại để ép Player chạy con link gốc! Bạn có thể xem ví dụ siêu kinh điển này ở dòng `616. // 4. Stream URL Logic` trong file `missav_plugin.js` của Repo.
+---
 
-*Một ví dụ về bắt m3u8 thuần túy rất dễ để bám theo là file `ophim_plugin.js` trong Repo.*
+## 📁 Ví Dụ Thực Tế
 
-> **Mẹo vặt JS Sandbox:** App sử dụng Google QuickJS Engine V8 siêu nhanh. Nên bạn đừng dùng các hàm DOM Web Browser như `document.querySelector` hoặc `window...`. Hãy thuần thục Regex `match() / exec()` và Parsing chuỗi `substr(), replace()` là trùm cuối!
+| Plugin | Độ khó | Kỹ thuật |
+|--------|--------|----------|
+| `ophim_plugin.js` | ⭐ Dễ | API trả JSON → `JSON.parse()` |
+| `kkphim_plugin.js` | ⭐⭐ Trung bình | API + HTML parse |
+| `vlxx_plugin.js` | ⭐⭐⭐ Nâng cao | AJAX POST + recursive embed + mimeType |
+
+🌐 Chúc bạn thành công! Đóng góp plugin cho cộng đồng nha!

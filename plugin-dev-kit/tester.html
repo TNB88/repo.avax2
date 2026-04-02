@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plugin Developer Tester</title>
+    <title>VAAPP Plugin Developer Tester</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -12,7 +12,7 @@
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Left Panel: Input & Plugin Load -->
         <div class="space-y-6">
-            <h1 class="text-2xl font-bold border-b border-gray-700 pb-2">Plugin Dev-Kit 🚀</h1>
+            <h1 class="text-2xl font-bold border-b border-gray-700 pb-2">VAAPP Plugin Dev-Kit 🚀</h1>
 
             <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
                 <h2 class="text-xl font-semibold mb-3">1. Nạp file JS Plugin</h2>
@@ -23,8 +23,8 @@
 
             <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
                 <h2 class="text-xl font-semibold mb-3">2. HTML Source / Tham số</h2>
-                <p class="text-xs text-gray-400 mb-2">Dán mã nguồn HTML (chọn "Thêm vào -> View Page Source" từ trang
-                    web phim) hoặc nhập Slug vào đây:</p>
+                <p class="text-xs text-gray-400 mb-2">Dán mã nguồn HTML (Ctrl+U trên trang web phim) hoặc nhập
+                    Slug vào đây:</p>
                 <textarea id="inputData" rows="10"
                     class="w-full bg-gray-900 text-gray-200 p-3 rounded border border-gray-600 focus:outline-none focus:border-blue-500 font-mono text-sm"
                     placeholder="<html>...</html> hoặc slug..."></textarea>
@@ -32,36 +32,58 @@
 
             <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
                 <h2 class="text-xl font-semibold mb-3">3. Chạy Hàm Kiểm Tra</h2>
-                <div class="grid grid-cols-2 gap-2">
+                
+                <p class="text-xs text-gray-500 mb-2 uppercase tracking-wider">Config</p>
+                <div class="grid grid-cols-2 gap-2 mb-3">
                     <button onclick="runFunction('getManifest')"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded text-sm transition">getManifest()</button>
                     <button onclick="runFunction('getHomeSections')"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded text-sm transition">getHomeSections()</button>
                     <button onclick="runFunction('getPrimaryCategories')"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded text-sm transition">getPrimaryCategories()</button>
+                    <button onclick="runFunction('getFilterConfig')"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded text-sm transition">getFilterConfig()</button>
+                </div>
 
+                <p class="text-xs text-gray-500 mb-2 uppercase tracking-wider">URL Builders</p>
+                <div class="grid grid-cols-2 gap-2 mb-3">
                     <button onclick="runFunction('getUrlList')"
                         class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded text-sm transition">getUrlList(slug)</button>
-                    <button onclick="runFunction('parseListResponse')"
-                        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded text-sm transition">parseListResponse(html)</button>
-
                     <button onclick="runFunction('getUrlDetail')"
                         class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded text-sm transition">getUrlDetail(slug)</button>
-                    <button onclick="runFunction('parseMovieDetail')"
-                        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded text-sm transition">parseMovieDetail(html)</button>
+                    <button onclick="runFunction('getUrlSearch')"
+                        class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded text-sm transition">getUrlSearch(keyword)</button>
+                </div>
 
-                    <button onclick="runFunction('parseDetailResponse')"
-                        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded text-sm transition">parseDetailResponse(html)</button>
+                <p class="text-xs text-gray-500 mb-2 uppercase tracking-wider">Parsers ⭐</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="runFunction('parseListResponse')"
+                        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded text-sm transition">parseListResponse(html)</button>
                     <button onclick="runFunction('parseSearchResponse')"
                         class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded text-sm transition">parseSearchResponse(html)</button>
+                    <button onclick="runFunction('parseMovieDetail')"
+                        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded text-sm transition">parseMovieDetail(html)</button>
+                    <button onclick="runFunction('parseDetailResponse')"
+                        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded text-sm transition">parseDetailResponse(html)</button>
+                    <button onclick="runFunction('parseEmbedResponse')"
+                        class="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded text-sm transition">parseEmbedResponse(html, url)</button>
+                </div>
+                
+                <!-- Source URL input for parseEmbedResponse -->
+                <div class="mt-3">
+                    <label class="text-xs text-gray-400">Source URL (cho parseEmbedResponse):</label>
+                    <input type="text" id="sourceUrl" placeholder="https://site.com/ajax.php"
+                        class="w-full mt-1 bg-gray-900 text-gray-200 p-2 rounded border border-gray-600 focus:outline-none focus:border-yellow-500 font-mono text-sm" />
                 </div>
             </div>
         </div>
 
-        <!-- Right Panel: Output Format -->
+        <!-- Right Panel: Output -->
         <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 flex flex-col h-full">
             <h2 class="text-xl font-semibold mb-3">4. Kết Quả (Output) 🖥️</h2>
-            <p class="text-xs text-gray-400 mb-2">Nếu kết quả không đúng chuẩn JSON App cần, App sẽ bị lỗi tải dữ liệu.
+            <p class="text-xs text-gray-400 mb-2">
+                <span class="text-green-400">Xanh</span> = JSON chuẩn ✅ | 
+                <span class="text-red-400">Đỏ</span> = Lỗi cần sửa ❌
             </p>
             <textarea id="outputData" readonly
                 class="w-full flex-1 bg-gray-900 text-green-400 p-3 rounded border border-gray-600 focus:outline-none font-mono text-sm whitespace-pre"></textarea>
@@ -69,32 +91,33 @@
     </div>
 
     <script>
-        // Load JS file globally
+        // Load JS file
         document.getElementById('pluginFile').addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function (e) {
                 try {
-                    // Xóa các hàm cũ
-                    ['getManifest', 'parseListResponse', 'parseMovieDetail', 'parseDetailResponse'].forEach(f => window[f] = undefined);
+                    // Xóa hàm cũ
+                    ['getManifest', 'getHomeSections', 'getPrimaryCategories', 'getFilterConfig',
+                     'getUrlList', 'getUrlSearch', 'getUrlDetail',
+                     'parseListResponse', 'parseSearchResponse', 'parseMovieDetail',
+                     'parseDetailResponse', 'parseEmbedResponse'].forEach(f => window[f] = undefined);
 
-                    // Nạp JS vào phạm vi toàn cục
                     const script = document.createElement('script');
                     script.textContent = e.target.result;
                     document.body.appendChild(script);
 
-                    document.getElementById('pluginStatus').textContent = `✅ Đã nạp thành công: ${file.name}`;
+                    document.getElementById('pluginStatus').textContent = `✅ Đã nạp: ${file.name}`;
                     document.getElementById('pluginStatus').classList.replace('text-red-400', 'text-green-400');
                 } catch (err) {
-                    document.getElementById('pluginStatus').textContent = `❌ Lỗi khi nạp: ${err.message}`;
+                    document.getElementById('pluginStatus').textContent = `❌ Lỗi: ${err.message}`;
                     document.getElementById('pluginStatus').classList.replace('text-green-400', 'text-red-400');
                 }
             };
             reader.readAsText(file);
         });
 
-        // Hàm chạy plugin
         function runFunction(funcName) {
             const outBox = document.getElementById('outputData');
             outBox.value = "";
@@ -103,7 +126,10 @@
 
             if (typeof window[funcName] !== 'function') {
                 outBox.classList.replace('text-green-400', 'text-red-400');
-                outBox.value = `❌ Lỗi: Hàm ${funcName}() chưa được định nghĩa trong file Plugin của bạn!`;
+                outBox.value = `❌ Hàm ${funcName}() chưa được định nghĩa trong plugin!\n\n` +
+                    (funcName === 'parseEmbedResponse' 
+                        ? '💡 Hàm này là TÙY CHỌN — chỉ cần khi trang dùng luồng embed phức tạp (AJAX → iframe → stream).'
+                        : '💡 Kiểm tra lại file JS đã nạp đúng chưa.');
                 return;
             }
 
@@ -111,29 +137,58 @@
 
             try {
                 let result;
-                // Nếu là các hàm parse (truyền tham số html) hoặc url (truyền slug)
-                if (funcName.startsWith('parse') || funcName.startsWith('getUrlList') || funcName.startsWith('getUrlDetail')) {
-                    if (!inputArgs && funcName.startsWith('parse')) {
-                        console.warn("Chưa nhập HTML source, hàm parse có thể sẽ lỗi hoặc thiếu dữ liệu.");
+
+                if (funcName === 'parseEmbedResponse') {
+                    // parseEmbedResponse nhận 2 tham số: html + sourceUrl
+                    const sourceUrl = document.getElementById('sourceUrl').value || 'https://example.com';
+                    result = window[funcName](inputArgs, sourceUrl);
+                } else if (funcName.startsWith('parse')) {
+                    if (!inputArgs) {
+                        console.warn("⚠️ Chưa nhập HTML source vào ô input.");
                     }
                     result = window[funcName](inputArgs, "{}");
-                } else if (funcName.startsWith('getUrlSearch')) {
-                    result = window[funcName](inputArgs || "batman", "{}");
+                } else if (funcName.startsWith('getUrl')) {
+                    result = window[funcName](inputArgs || "phim-le", "{}");
                 } else {
-                    // Hàm cấu hình ko tham số: getManifest, vv.
                     result = window[funcName]();
                 }
 
-                // Format JSON output đẹp cho dễ nhìn
+                // Format JSON
                 try {
-                    outBox.value = JSON.stringify(JSON.parse(result), null, 4);
+                    const parsed = JSON.parse(result);
+                    outBox.value = JSON.stringify(parsed, null, 4);
+                    
+                    // Validation hints
+                    if (funcName === 'parseListResponse' || funcName === 'parseSearchResponse') {
+                        if (!parsed.items || !Array.isArray(parsed.items)) {
+                            outBox.value += '\n\n⚠️ Thiếu trường "items" (phải là Array)';
+                        } else if (parsed.items.length === 0) {
+                            outBox.value += '\n\n⚠️ Mảng items rỗng — kiểm tra lại regex parse';
+                        }
+                    }
+                    if (funcName === 'parseMovieDetail') {
+                        if (!parsed.servers || parsed.servers.length === 0) {
+                            outBox.value += '\n\n⚠️ Thiếu trường "servers" — App cần ít nhất 1 server có episodes';
+                        }
+                    }
+                    if (funcName === 'parseDetailResponse') {
+                        if (!parsed.url) {
+                            outBox.value += '\n\n⚠️ Thiếu trường "url" — App cần URL video để phát';
+                        }
+                        if (parsed.isEmbed) {
+                            outBox.value += '\n\n📌 isEmbed=true → App sẽ fetch URL này và gọi parseEmbedResponse()';
+                        }
+                        if (parsed.mimeType) {
+                            outBox.value += '\n\n📌 mimeType="' + parsed.mimeType + '" → ExoPlayer sẽ dùng content type này';
+                        }
+                    }
                 } catch (e) {
-                    // Nếu ko phải JSON thì in nguyên bản (các hàm getUrl trả String)
+                    // Không phải JSON (các hàm getUrl trả String thường)
                     outBox.value = result;
                 }
             } catch (err) {
                 outBox.classList.replace('text-green-400', 'text-red-400');
-                outBox.value = `❌ LỖI THỰC THI (Exception):\n\n${err.stack || err.message}`;
+                outBox.value = `❌ LỖI THỰC THI:\n\n${err.stack || err.message}`;
             }
         }
     </script>
