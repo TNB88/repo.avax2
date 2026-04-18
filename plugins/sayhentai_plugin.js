@@ -6,7 +6,7 @@ function getManifest() {
     return JSON.stringify({
         "id": "sayhentai",
         "name": "SayHentai",
-        "version": "1.0.3",
+        "version": "1.0.4",
         "baseUrl": "https://sayhentai.sh",
         "iconUrl": "https://sayhentai.sh/favicon-32x32.png",
         "isEnabled": true,
