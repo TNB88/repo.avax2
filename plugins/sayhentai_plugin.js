@@ -142,6 +142,14 @@ function parseListResponse(html) {
             itemHtml.match(/<img[^>]+data-lazy-src="([^"]+)"/i);
         var thumb = thumbMatch ? thumbMatch[1] : "";
 
+        if (thumb && thumb.indexOf("http") !== 0) {
+            if (thumb.indexOf("/") === 0) {
+                thumb = "https://sayhentai.sh" + thumb;
+            } else {
+                thumb = "https://sayhentai.sh/" + thumb;
+            }
+        }
+
         // Extract Latest Chapter
         var chapterMatch = itemHtml.match(/<span[^>]*class="[^"]*chapter[^"]*"[^>]*>\s*<a[^>]*>([\s\S]*?)<\/a>/i);
         var chapter = chapterMatch ? PluginUtils.cleanText(chapterMatch[1]) : "";
@@ -284,7 +292,7 @@ function parseDetailResponse(html) {
         var imgRegex = /<div[^>]*class="page-break[^"]*"[^>]*>\s*<img[^>]+(?:src|data-src|data-lazy-src)="([^"]+)"/gi;
         var match;
         while ((match = imgRegex.exec(html)) !== null) {
-            images.push(match[1]);
+            images.push(match[1].replace(/&amp;/g, "&"));
         }
 
         // Fallback: search all images in reading-content
@@ -295,7 +303,7 @@ function parseDetailResponse(html) {
                 var fallbackRegex = /<img[^>]+(?:src|data-src|data-lazy-src)="([^"]+)"/gi;
                 var fm;
                 while ((fm = fallbackRegex.exec(readerHtml)) !== null) {
-                    images.push(fm[1]);
+                    images.push(fm[1].replace(/&amp;/g, "&"));
                 }
             }
         }
