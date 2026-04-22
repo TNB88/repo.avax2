@@ -6,7 +6,7 @@ function getManifest() {
     return JSON.stringify({
         "id": "vlxx",
         "name": "VLXX",
-        "version": "1.0.2",
+        "version": "1.0.1",
         "baseUrl": "https://vlxx.moi",
         "iconUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/vlxx.ico",
         "isEnabled": true,
@@ -81,11 +81,11 @@ function getUrlSearch(keyword, filtersJson) {
 }
 
 // getUrlDetail: App gọi với episode.id
+// episode.id = canonical URL (có thể kèm #s2 cho server 2)
+// Trả về URL as-is (starts with http) → App fetch trang detail
 function getUrlDetail(slug) {
     if (!slug) return "";
-    if (slug.indexOf("http") === 0) {
-        return slug.replace("vlxx.bz", "vlxx.moi");
-    }
+    if (slug.indexOf("http") === 0) return slug;
     if (slug.charAt(0) !== '/') slug = '/' + slug;
     return "https://vlxx.moi" + slug;
 }
@@ -195,13 +195,20 @@ function parseMovieDetail(html) {
             }
         }
 
+        // =====================================================================
+        // episode.id = canonical URL + #s{serverId}
+        // Khi user bấm xem → App gọi getUrlDetail(url#s1) → fetch trang detail
+        // → parseDetailResponse trích data-id + server từ fragment → trả AJAX POST
+        // =====================================================================
+
         var servers = [];
 
+        // Lấy canonical URL
         var canonicalMatch = html.match(/<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/i)
             || html.match(/<meta[^>]*property=["']og:url["'][^>]*content=["']([^"']+)["']/i);
         var pageUrl = canonicalMatch ? canonicalMatch[1] : "";
-        if (pageUrl) pageUrl = pageUrl.replace("vlxx.bz", "vlxx.moi");
 
+        // Tìm server buttons: onclick="server(1,3105)" onclick="server(2,3105)"
         var serverRegex = /onclick=["']server\((\d+),\s*(\d+)\)["']/gi;
         var srvMatch;
 
@@ -217,6 +224,7 @@ function parseMovieDetail(html) {
             });
         }
 
+        // Fallback nếu không tìm thấy server buttons
         if (servers.length === 0 && pageUrl) {
             servers.push({
                 name: "Server #1",
@@ -252,14 +260,18 @@ function parseMovieDetail(html) {
 }
 
 // =============================================================================
-// STREAM RESOLUTION
+// STREAM RESOLUTION (3-step: detail page → AJAX POST → embed page)
 // =============================================================================
 
+// parseDetailResponse: Nhận HTML tĩnh từ detail page
+// Trích data-id + server number → trả AJAX POST config cho App
 function parseDetailResponse(html, fetchedUrl) {
     try {
+        // Trích data-id từ HTML
         var dataIdMatch = html.match(/data-id=["'](\d+)["']/i);
         var videoId = dataIdMatch ? dataIdMatch[1] : "";
 
+        // Fallback: lấy ID từ URL path (ví dụ: /video/.../3105/)
         if (!videoId && fetchedUrl) {
             var urlIdMatch = fetchedUrl.match(/\/(\d+)\/?(?:#|$)/);
             if (urlIdMatch) videoId = urlIdMatch[1];
@@ -269,16 +281,19 @@ function parseDetailResponse(html, fetchedUrl) {
             return JSON.stringify({ url: "", isEmbed: false, headers: {} });
         }
 
+        // Trích server number từ URL fragment (#s1, #s2)
         var serverId = "1";
         if (fetchedUrl) {
             var fragMatch = fetchedUrl.match(/#s(\d+)/);
             if (fragMatch) serverId = fragMatch[1];
         }
 
+        // Trích device type từ HTML
         var deviceMatch = html.match(/deviceType\s*=\s*['"](\w+)['"]/i);
         var deviceType = deviceMatch ? deviceMatch[1] : "mobile";
         var vlxxServer = (deviceType === "desktop") ? "1" : "2";
 
+        // Trả config để App POST tới /ajax.php
         return JSON.stringify({
             url: "https://vlxx.moi/ajax.php",
             isEmbed: true,
@@ -292,89 +307,106 @@ function parseDetailResponse(html, fetchedUrl) {
     }
 }
 
+// parseEmbedResponse: Xử lý 2 loại response:
+// Depth 1 - AJAX JSON: {"player":"<iframe src=\"...\">"}  → trích iframe URL
+// Depth 2 - Embed HTML: JWPlayer sources với .vl URL      → trích stream URL
 function parseEmbedResponse(html, url) {
     try {
-        // 1. Kiểm tra nếu có link .vl trực tiếp (Ưu tiên hàng đầu)
-        var vlMatch = html.match(/(https?:\/\/[^\s"'\\]+\.vl[^\s"'\\]*)/i);
-        if (vlMatch) {
-            var streamUrl = vlMatch[1].replace(/\\\//g, '/');
-            return JSON.stringify({
-                url: streamUrl,
-                isEmbed: false,
-                mimeType: "application/x-mpegURL",
-                headers: {
-                    "Referer": url.indexOf("vlstream") !== -1 ? url : "https://play.vlstream.net/"
-                }
-            });
-        }
-
-        // 2. Xử lý AJAX JSON response
+        // === CASE 1: AJAX JSON response (chứa "player" key) ===
+        // Response dạng: {"player":"<iframe src=\"https:\/\/play.vlstream.net\/embed\/hash\/s1\" ...>"}
+        // Cần JSON.parse để unescape \/ thành / và \" thành "
         if (html.indexOf('"player"') !== -1) {
             try {
                 var jsonObj = JSON.parse(html);
                 if (jsonObj && jsonObj.player) {
                     var playerHtml = jsonObj.player;
-
-                    // Thử tìm link .vl trong playerHtml trước
-                    var innerVl = playerHtml.match(/(https?:\/\/[^\s"'\\]+\.vl[^\s"'\\]*)/i);
-                    if (innerVl) {
-                        return JSON.stringify({
-                            url: innerVl[1].replace(/\\\//g, '/'),
-                            isEmbed: false,
-                            mimeType: "application/x-mpegURL",
-                            headers: { "Referer": "https://vlxx.moi/" }
-                        });
-                    }
-
+                    // playerHtml giờ là clean HTML: <iframe src="https://play.vlstream.net/embed/hash/s1" ...>
                     var srcMatch = playerHtml.match(/src=["']([^"']+)["']/i);
                     if (srcMatch) {
                         return JSON.stringify({
                             url: srcMatch[1],
                             isEmbed: true,
-                            headers: { "Referer": "https://vlxx.moi/" }
+                            headers: {
+                                "Referer": "https://vlxx.moi/"
+                            }
                         });
                     }
                 }
-            } catch (e) {
-                // Regex fallback cho JSON
+            } catch (parseErr) {
+                // Fallback: regex trên raw JSON string
+                // Unescape \/ trước khi match
                 var cleaned = html.replace(/\\\//g, '/');
-                var iframeMatch = cleaned.match(/src=["'](https?:\/\/play\.vlstream\.net\/embed\/[^"']+)["']/i);
+                // Match src=\"URL\" hoặc src=\\"URL\\"
+                var iframeMatch = cleaned.match(/src=(?:\\\\)?["'](https?:\/\/[^"'\\]+)(?:\\\\)?["']/i);
                 if (iframeMatch) {
                     return JSON.stringify({
                         url: iframeMatch[1],
                         isEmbed: true,
-                        headers: { "Referer": "https://vlxx.moi/" }
+                        headers: {
+                            "Referer": "https://vlxx.moi/"
+                        }
                     });
                 }
             }
         }
 
-        // 3. Xử lý Embed page HTML (Tìm sources array hoặc window.$$ops)
-        var sourcesMatch = html.match(/sources\s*:\s*(\[[\s\S]+?\])\s*[,}]/i);
-        if (sourcesMatch) {
-            var sourcesStr = sourcesMatch[1];
-            var fileMatchInSources = sourcesStr.match(/"file"\s*:\s*"([^"]+\.vl[^"]*)"/i);
-            if (fileMatchInSources) {
-                return JSON.stringify({
-                    url: fileMatchInSources[1].replace(/\\\//g, '/'),
-                    isEmbed: false,
-                    mimeType: "application/x-mpegURL",
-                    headers: { "Referer": "https://play.vlstream.net/" }
-                });
-            }
-        }
-
-        // 4. Tìm bất kỳ URL m3u8 nào khác nếu không có .vl
-        var m3u8Match = html.match(/(https?:\/\/[^\s"'\\]+\.m3u8[^\s"'\\]*)/i);
-        if (m3u8Match) {
+        // === CASE 2: Embed page HTML (JWPlayer with .vl sources) ===
+        var fileMatch = html.match(/"file"\s*:\s*"(https?[^"]+\.vl[^"]*)"/i);
+        if (fileMatch) {
             return JSON.stringify({
-                url: m3u8Match[1].replace(/\\\//g, '/'),
+                url: fileMatch[1],
                 isEmbed: false,
                 mimeType: "application/x-mpegURL",
-                headers: { "Referer": "https://play.vlstream.net/" }
+                headers: {
+                    "Referer": "https://play.vlstream.net/"
+                }
             });
         }
 
+        // Thử parse sources array
+        var sourcesMatch = html.match(/sources\s*:\s*(\[[^\]]+\])/i);
+        if (sourcesMatch) {
+            try {
+                var sources = JSON.parse(sourcesMatch[1]);
+                if (sources && sources.length > 0 && sources[0].file) {
+                    return JSON.stringify({
+                        url: sources[0].file,
+                        isEmbed: false,
+                        mimeType: sources[0].type === 'hls' ? 'application/x-mpegURL' : '',
+                        headers: {
+                            "Referer": "https://play.vlstream.net/"
+                        }
+                    });
+                }
+            } catch (e) {
+                var regexFile = sourcesMatch[1].match(/"file"\s*:\s*"([^"]+)"/i);
+                if (regexFile) {
+                    return JSON.stringify({
+                        url: regexFile[1],
+                        isEmbed: false,
+                        mimeType: "application/x-mpegURL",
+                        headers: {
+                            "Referer": "https://play.vlstream.net/"
+                        }
+                    });
+                }
+            }
+        }
+
+        // Tìm bất kỳ URL .vl nào
+        var vlMatch = html.match(/(https?:\/\/[^\s"'\\]+\.vl[^\s"'\\]*)/i);
+        if (vlMatch) {
+            return JSON.stringify({
+                url: vlMatch[1],
+                isEmbed: false,
+                mimeType: "application/x-mpegURL",
+                headers: {
+                    "Referer": "https://play.vlstream.net/"
+                }
+            });
+        }
+
+        // Không tìm được gì → trả empty để dừng recursive loop
         return JSON.stringify({ url: "", isEmbed: false, headers: {} });
     } catch (e) {
         return JSON.stringify({ url: "", isEmbed: false, headers: {} });
