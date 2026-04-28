@@ -37,13 +37,6 @@
             "iconUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/clbpx.ico"
         },
         {
-            "id": "sieutamphim",
-            "name": "Sưu Tầm Phim",
-            "version": "1.0.0",
-            "scriptUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/sieutamphim_plugin.js",
-            "iconUrl": "https://www.sieutamphim.pro/favicon.ico"
-        },
-        {
             "id": "thapcam",
             "name": "Thập Cẩm Fake",
             "version": "1.0.3",
