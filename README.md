@@ -1,7 +1,5 @@
 # VAAPP Plugin System — Hướng Dẫn Phát Triển 🚀
 
-VAAPP là ứng dụng xem phim/đọc truyện trên **Android & Android TV**. Toàn bộ nội dung được cung cấp thông qua hệ thống **Plugin JavaScript** — bạn viết 1 file `.js` là có thể cào bất kỳ trang phim/truyện nào trên mạng.
-
 ---
 
 ## Tổng Quan — App Hoạt Động Như Nào?
