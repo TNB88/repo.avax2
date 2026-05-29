@@ -6,7 +6,7 @@ function getManifest() {
     return JSON.stringify({
         "id": "misskon",
         "name": "MissKon",
-        "version": "1.0.1",
+        "version": "1.0.0",
         "baseUrl": "https://misskon.com",
         "iconUrl": "https://misskon.com/favicon.ico",
         "isEnabled": true,
@@ -304,7 +304,7 @@ function parseDetailResponse(html) {
                 // Exclude obvious non-content images
                 var isGarbage = url.indexOf("data:image/svg+xml") !== -1 ||
                     url.indexOf("misskon.ico") !== -1 ||
-                    url.indexOf("ads") !== -1 ||
+                    url.indexOf("/ads/") !== -1 ||
                     url.indexOf("ad-provider") !== -1 ||
                     url.indexOf("gravatar") !== -1 ||
                     url.indexOf("logo.2026") !== -1;
