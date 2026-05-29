@@ -216,7 +216,7 @@ function parseMovieDetail(html) {
                     poster = schemaMatch[1].replace(/\\/g, "");
                 } else {
                     // Final fallback: use the first content image from the whole page
-                    var firstImgMatch = html.match(/<img[^>]+(?:data-src|src)="([^"]+(?:pok\.misskon\.com|\/media\/)[^"]+)"/i);
+                    var firstImgMatch = html.match(/<img[^>]+(?:data-src|src)="([^"]+(?:misskon\.com\/uploads|\/media\/|pok\.misskon\.com)[^"]+)"/i);
                     if (firstImgMatch) poster = firstImgMatch[1];
                 }
             }
@@ -296,16 +296,18 @@ function parseDetailResponse(html) {
             if (urlMatch) {
                 var url = urlMatch[1];
 
-                // Content images on MissKon usually reside in pok.misskon.com or /media/
-                var isContentImg = url.indexOf("pok.misskon.com") !== -1 ||
-                    url.indexOf("/media/") !== -1;
+                // Content images on MissKon usually reside in pok.misskon.com, cdn, uploads, or /media/
+                var isContentImg = url.indexOf("misskon.com") !== -1 ||
+                    url.indexOf("/media/") !== -1 ||
+                    url.indexOf("/uploads/") !== -1;
 
                 // Exclude obvious non-content images
                 var isGarbage = url.indexOf("data:image/svg+xml") !== -1 ||
                     url.indexOf("misskon.ico") !== -1 ||
                     url.indexOf("ads") !== -1 ||
                     url.indexOf("ad-provider") !== -1 ||
-                    url.indexOf("gravatar") !== -1;
+                    url.indexOf("gravatar") !== -1 ||
+                    url.indexOf("logo.2026") !== -1;
 
                 if (isContentImg && !isGarbage) {
                     if (images.indexOf(url) === -1) {
