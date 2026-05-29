@@ -116,7 +116,7 @@
         {
             "id": "misskon",
             "name": "MissKon",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "scriptUrl": "https://raw.githubusercontent.com/youngbi/repo/main/plugins/misskon_plugin.js",
             "iconUrl": "https://misskon.com/favicon.ico"
         }
