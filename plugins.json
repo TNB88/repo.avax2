@@ -8,7 +8,7 @@
             "scriptUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/ophim_plugin.js",
             "iconUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/ophim.ico"
         },
-        {
+         {
             "id": "chattubate",
             "name": "Chaturbate",
             "version": "1.0.0",
