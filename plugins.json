@@ -8,6 +8,13 @@
             "scriptUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/ophim_plugin.js",
             "iconUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/ophim.ico"
         },
+         {
+            "id": "chatubate",
+            "name": "Chatubate",
+            "version": "0.0.1",
+            "scriptUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/chattubate_plugin.js",
+            "iconUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/chatubate.ico"
+        },
         {
             "id": "kkphim",
             "name": "KKPhim",
