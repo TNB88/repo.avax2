@@ -11,7 +11,7 @@
         {
             "id": "chattubate",
             "name": "Chaturbate",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "scriptUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/chattubate_plugin.js",
             "iconUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/chatubate.ico"
         },
@@ -23,11 +23,11 @@
             "iconUrl": "https://upload.wikimedia.org/wikipedia/en/thumb/f/f9/Stripchat-logo.svg/960px-Stripchat-logo.svg.png"
         },
         {
-            "id": "timfshare",
-            "name": "Tìm Fshare",
+            "id": "thuviencine",
+            "name": "ThuVienCine",
             "version": "1.0.1",
-            "scriptUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/timfshare_plugin.js",
-            "iconUrl": "https://www.fshare.vn/favicon.ico"
+            "scriptUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/thuviencine_plugin.js",
+            "iconUrl": "https://thuviencine.xyz/favicon.ico"
         },
         {
             "id": "kkphim",
