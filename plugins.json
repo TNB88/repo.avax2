@@ -8,12 +8,19 @@
             "scriptUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/ophim_plugin.js",
             "iconUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/ophim.ico"
         },
-         {
+        {
             "id": "chattubate",
             "name": "Chaturbate",
             "version": "1.0.0",
             "scriptUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/chattubate_plugin.js",
             "iconUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/chatubate.ico"
+        },
+        {
+            "id": "stripchat",
+            "name": "Stripchat",
+            "version": "1.0.0",
+            "scriptUrl": "https://raw.githubusercontent.com/TNB88/repo.avax2/refs/heads/main/plugins/stripchat_plugin.js",
+            "iconUrl": "https://upload.wikimedia.org/wikipedia/en/thumb/f/f9/Stripchat-logo.svg/960px-Stripchat-logo.svg.png"
         },
         {
             "id": "kkphim",
