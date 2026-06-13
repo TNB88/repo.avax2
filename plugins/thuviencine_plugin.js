@@ -7,8 +7,8 @@
 
 // Fill these in your private/local copy. Do not publish a copy with real
 // credentials to a public raw GitHub URL.
-var FSHARE_USERNAME = "tongbinhnguyen9090@gmail.com";
-var FSHARE_PASSWORD = "Phuoc@3011";
+var FSHARE_USERNAME = "";
+var FSHARE_PASSWORD = "";
 
 var BASE_URL = "https://thuviencine.xyz";
 var FSHARE_BASE = "https://www.fshare.vn";
